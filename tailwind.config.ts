@@ -39,6 +39,26 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        support: {
+          DEFAULT: "hsl(var(--support))",
+          foreground: "hsl(var(--support-foreground))",
+        },
+        urgent: {
+          DEFAULT: "hsl(var(--urgent))",
+          foreground: "hsl(var(--urgent-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        "chat-user": {
+          DEFAULT: "hsl(var(--chat-user))",
+          foreground: "hsl(var(--chat-user-foreground))",
+        },
+        "chat-assistant": {
+          DEFAULT: "hsl(var(--chat-assistant))",
+          foreground: "hsl(var(--chat-assistant-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -84,6 +104,11 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-support": "var(--gradient-support)",
+        "gradient-calm": "var(--gradient-calm)",
       },
     },
   },
