@@ -81,6 +81,7 @@ const ChatInterface = () => {
     },
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [sending, setSending] = useState(false);
 
   const addMessage = (text: string, sender: 'user' | 'assistant') => {
     const newMessage: Message = {
@@ -92,21 +93,56 @@ const ChatInterface = () => {
     setMessages(prev => [...prev, newMessage]);
   };
 
+  const sendToBackend = async (text: string) => {
+    setSending(true);
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
+      const data = await res.json();
+      addMessage(data.response ?? 'Sorry, empty response from server.', 'assistant');
+    } catch (err) {
+      console.error('Fetch error:', err);
+      addMessage('Sorry, there was an error processing your request.', 'assistant');
+    } finally {
+      setSending(false);
+    }
+  };
+  
+  /* using vite api url env variable
+  const sendToBackend = async (text: string) => {
+    setSending(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${apiBase}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      });
+      const data = await res.json();
+      addMessage(data.response ?? 'Sorry, empty response from server.', 'assistant');
+    } catch (err) {
+      console.error(err);
+      addMessage('Sorry, there was an error processing your request.', 'assistant');
+    } finally {
+      setSending(false);
+    }
+  };
+  */
   const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
-    
+    if (!inputValue.trim() || sending) return;
+
     addMessage(inputValue, 'user');
+    const text = inputValue;
     setInputValue('');
-    
-    // Simulate assistant response
-    setTimeout(() => {
-      const responses = [
-        "I understand you need help. Let me find the best resources available in your area.",
-        "I'm here to support you. What specific type of assistance are you looking for?",
-        "I can help you locate services nearby. Would you like me to show you a map of available resources?",
-      ];
-      addMessage(responses[Math.floor(Math.random() * responses.length)], 'assistant');
-    }, 1000);
+    sendToBackend(text);
   };
 
   const handleQuickAction = (action: string) => {
@@ -115,19 +151,11 @@ const ChatInterface = () => {
       food: "Where can I find food assistance?",
       healthcare: "I need healthcare services",
       map: "Show me services near my location",
-    };
-    
-    addMessage(actionMessages[action as keyof typeof actionMessages], 'user');
-    
-    setTimeout(() => {
-      const responses = {
-        shelter: "I'll help you find emergency shelter options. There are several facilities in your area that provide immediate assistance. Would you like me to show you the nearest locations?",
-        food: "There are food banks and meal programs available. Many serve meals daily and some offer food packages. Let me find the closest options for you.",
-        healthcare: "I can help you locate free and low-cost healthcare services including community health centers and mobile clinics. What type of care do you need?",
-        map: "I'll show you a map with all available services in your area including shelters, food assistance, healthcare, and other support services.",
-      };
-      addMessage(responses[action as keyof typeof responses], 'assistant');
-    }, 1000);
+    } as const;
+
+    const msg = actionMessages[action as keyof typeof actionMessages];
+    addMessage(msg, 'user');
+    sendToBackend(msg);
   };
 
   return (
@@ -151,10 +179,11 @@ const ChatInterface = () => {
             placeholder="Type your message..."
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             className="flex-1"
+            disabled={sending}
           />
           <Button 
             onClick={handleSendMessage}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || sending}
             size="icon"
           >
             <Send className="h-4 w-4" />
