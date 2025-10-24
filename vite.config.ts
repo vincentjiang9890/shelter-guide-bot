@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       '/chat': {
-        target: 'http://python-backend:5002',
+        target: 'http://python-backend:5002', 
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {

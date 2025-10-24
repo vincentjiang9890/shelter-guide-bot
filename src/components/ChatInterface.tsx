@@ -71,15 +71,32 @@ const ChatMessage = ({ message }: { message: Message }) => {
   );
 };
 
+//const STORAGE_KEY = 'chat_conversation_history';
+
 const ChatInterface = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
+  const STORAGE_KEY = 'chat_conversation_history';
+  
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      } catch (e) {
+        console.error('Failed to parse saved messages:', e);
+      }
+    }
+    return [{
       id: '1',
       text: "Hello! I'm here to help you find resources and support. What do you need assistance with today?",
       sender: 'assistant',
       timestamp: new Date(),
-    },
-  ]);
+    }];
+  });
+
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -90,18 +107,33 @@ const ChatInterface = () => {
       sender,
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => {
+      const updated = [...prev, newMessage];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); // save to local storage
+      return updated;
+    });
+    //setMessages(prev => [...prev, newMessage]); without local storage
   };
 
-  const sendToBackend = async (text: string) => {
+  const sendToBackend = async (text: string) => { 
     setSending(true);
     try {
       const res = await fetch('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({
+          message: text,
+          //conversation_history: messages.slice(-10) // local storage
+          conversation_history: messages.slice(-10).map(msg => ({
+          sender: msg.sender,
+          text: msg.text,
+          timestamp: msg.timestamp
+        }))
+        }),
       });
       
+      console.log('Response status:', res.status); //test line
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
